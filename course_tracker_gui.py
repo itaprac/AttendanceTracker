@@ -4,7 +4,17 @@ from course_tracker import CourseTracker
 
 
 class CourseTrackerGUI:
+    """
+    A class to create a GUI for tracking courses and their unattended classes.
+    """
+
     def __init__(self, master):
+        """
+        Initializes the CourseTrackerGUI with the master window.
+
+        Args:
+            master (tk.Tk): The root window of the Tkinter application.
+        """
         self.master = master
         self.master.title("Course Attendance Tracker")
         self.tracker = CourseTracker()
@@ -13,11 +23,14 @@ class CourseTrackerGUI:
         self.setup_gui()
 
     def setup_gui(self):
+        """
+        Sets up the GUI elements.
+        """
         # Frame for adding new courses
         add_frame = ttk.LabelFrame(self.master, text="Dodaj nowy kurs")
         add_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
-        # TODO: Add entry fields for course name and format, and an "Add" button
+        # Entry fields for course name and format, and an "Add" button
         self.course_name_label = ttk.Label(add_frame, text="Nazwa kursu")
         self.course_name_label.grid(row=0, column=0, padx=10, pady=10, sticky="e")
         self.course_name_entry = ttk.Entry(add_frame)
@@ -26,6 +39,7 @@ class CourseTrackerGUI:
         # Create a label for the dropdown
         self.dropdown_label = ttk.Label(add_frame, text="Format:")
         self.dropdown_label.grid(row=0, column=2, padx=5, pady=5, sticky="e")
+
         # Create the dropdown (Combobox)
         self.categories = ["Audytorium", "Wyklad", "Laboratorium"]
         self.category_var = tk.StringVar()
@@ -111,14 +125,18 @@ class CourseTrackerGUI:
         self.decrement_button.config(state="disabled")
 
     def add_course(self):
-        # TODO: Implement adding a new course
+        """
+        Adds a new course to the tracker and updates the course list.
+        """
         course_name = self.course_name_entry.get()
         format = self.category_var.get()
         self.tracker.add_course(course_name, format)
         self.list_courses()
 
     def list_courses(self):
-        # TODO: Implement listing all courses
+        """
+        Lists all courses in the Treeview widget.
+        """
         # Clear all items from the Treeview
         self.courses_tree.delete(*self.courses_tree.get_children())
         courses = self.tracker.list_courses()
@@ -128,7 +146,11 @@ class CourseTrackerGUI:
             )
 
     def delete_course(self):
+        """
+        Deletes the selected course from the tracker and updates the course list.
+        """
         if self.selected_item:
+            print(self.selected_item)
             values = self.courses_tree.item(self.selected_item, "values")
             course_name = values[0]
             course_format = values[1]
@@ -139,6 +161,9 @@ class CourseTrackerGUI:
             self.update_button_states()
 
     def increment_unattended(self):
+        """
+        Increments the unattended classes for the selected course and updates the course list.
+        """
         if self.selected_item:
             values = self.courses_tree.item(self.selected_item, "values")
             course_name = values[0]
@@ -147,6 +172,9 @@ class CourseTrackerGUI:
             self.list_courses()
 
     def decrement_unattended(self):
+        """
+        Decrements the unattended classes for the selected course and updates the course list.
+        """
         if self.selected_item:
             values = self.courses_tree.item(self.selected_item, "values")
             course_name = values[0]
@@ -155,6 +183,9 @@ class CourseTrackerGUI:
             self.list_courses()
 
     def update_button_states(self):
+        """
+        Updates the states of the buttons based on the selected item in the Treeview.
+        """
         if self.selected_item:
             self.delete_button.config(state="normal")
             self.increment_button.config(state="normal")
@@ -164,8 +195,13 @@ class CourseTrackerGUI:
             self.increment_button.config(state="disabled")
             self.decrement_button.config(state="disabled")
 
-    # Function to handle tree selection
     def on_tree_select(self, event):
+        """
+        Handles the selection event in the Treeview.
+
+        Args:
+            event (tk.Event): The event object.
+        """
         selected_items = self.courses_tree.selection()
         if selected_items:
             self.selected_item = selected_items[0]
