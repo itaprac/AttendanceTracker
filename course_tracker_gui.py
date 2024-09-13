@@ -20,7 +20,7 @@ class CourseTrackerGUI:
         self.tracker = CourseTracker()
         self.selected_item = None
 
-        # Make window resazible
+        # Make window resizable
         self.master.geometry("750x400")
         self.master.minsize(700, 370)
         self.master.columnconfigure(0, weight=1)
@@ -29,7 +29,7 @@ class CourseTrackerGUI:
         # Bind keybinds
         self.bind_shortcuts()
 
-        # center window
+        # Center window
         self.center_window()
 
         # Create and set up the GUI elements
@@ -108,6 +108,10 @@ class CourseTrackerGUI:
         # Variable to store the selected item
         self.selected_item = None
         self.courses_tree.bind("<<TreeviewSelect>>", self.on_tree_select)
+        self.courses_tree.bind("<Button-1>", self.on_tree_click)
+
+        # Setup tags (colors)
+        self.setup_treeview_tags()
 
         # Create a frame for buttons
         button_frame = ttk.Frame(list_frame)
@@ -175,8 +179,12 @@ class CourseTrackerGUI:
 
         courses = self.tracker.list_courses()
         for course in courses:
+            tag = self.get_attendance_tag(course.un_classes)
             item = self.courses_tree.insert(
-                "", "end", values=(course.name, course.format, course.un_classes)
+                "",
+                "end",
+                values=(course.name, course.format, course.un_classes),
+                tags=(tag,),
             )
             # If this is the item we want to select, store its ID
             if select_item and (course.name, course.format) == select_item:
@@ -189,9 +197,6 @@ class CourseTrackerGUI:
                 self.selected_item
             )  # Ensure the selected item is visible
 
-        # couses error works fine without it
-        # self.update_button_states()
-
     def delete_course(self):
         """
         Deletes the selected course from the tracker and updates the course list.
@@ -200,7 +205,6 @@ class CourseTrackerGUI:
             values = self.courses_tree.item(self.selected_item, "values")
             course_name = values[0]
             course_format = values[1]
-            # print(f"Deleting course: {course_name} {course_format}")
             if messagebox.askyesno(
                 "Potwierdzenie Usunięcia", f"Czy na pewno chcesz usunąć {course_name}?"
             ):
@@ -224,6 +228,7 @@ class CourseTrackerGUI:
             course_format = values[1]
             self.tracker.increment_unattended(course_name, course_format)
             self.list_courses((course_name, course_format))
+            self.courses_tree.focus_set()
 
     def decrement_unattended(self):
         """
@@ -235,6 +240,7 @@ class CourseTrackerGUI:
             course_format = values[1]
             self.tracker.decrement_unattended(course_name, course_format)
             self.list_courses((course_name, course_format))
+            self.courses_tree.focus_set()
 
     def update_button_states(self):
         """
@@ -250,12 +256,6 @@ class CourseTrackerGUI:
             self.decrement_button.config(state="disabled")
 
     def on_tree_select(self, event):
-        """
-        Handles the selection event in the Treeview.
-
-        Args:
-            event (tk.Event): The event object.
-        """
         selected_items = self.courses_tree.selection()
         if selected_items:
             self.selected_item = selected_items[0]
@@ -263,9 +263,40 @@ class CourseTrackerGUI:
             self.selected_item = None
         self.update_button_states()
 
+    def on_tree_click(self, event):
+        region = self.courses_tree.identify("region", event.x, event.y)
+        if region == "nothing":
+            # Click was on empty space
+            self.deselect_item()
+
+    def deselect_item(self, event=None):
+        """
+        Deselects the currently selected item in the Treeview.
+        """
+        self.courses_tree.selection_remove(self.courses_tree.selection())
+        self.selected_item = None
+        self.update_button_states()
+        self.courses_tree.focus_set()
+
+    def move_selection(self, direction):
+        if self.selected_item:
+            items = self.courses_tree.get_children()
+            current_index = items.index(self.selected_item)
+            new_index = (current_index + direction) % len(items)
+            new_item = items[new_index]
+            self.courses_tree.selection_set(new_item)
+            self.courses_tree.see(new_item)
+            self.selected_item = new_item
+            self.update_button_states()
+
     def bind_shortcuts(self):
         self.master.bind("<BackSpace>", lambda event: self.delete_course())
         self.master.bind("<Delete>", lambda event: self.delete_course())
+        self.master.bind("<Left>", lambda event: self.decrement_unattended())
+        self.master.bind("<Right>", lambda event: self.increment_unattended())
+        self.master.bind("<Up>", lambda event: self.move_selection(-1))
+        self.master.bind("<Down>", lambda event: self.move_selection(1))
+        self.master.bind("<Escape>", self.deselect_item)
 
     def center_window(self):
         # Update the idle tasks to make sure the window size is calculated
@@ -281,6 +312,22 @@ class CourseTrackerGUI:
 
         # Set the position of the window to the center of the screen
         self.master.geometry(f"+{x}+{y}")
+
+    def setup_treeview_tags(self):
+        self.courses_tree.tag_configure("green", background="#90EE90")  # Light green
+        self.courses_tree.tag_configure("yellow", background="#faf86e")  # Light yellow
+        self.courses_tree.tag_configure("orange", background="#f5b127")  # Light orange
+        self.courses_tree.tag_configure("red", background="#ff4051")  # Light red
+
+    def get_attendance_tag(self, un_classes):
+        if un_classes == 0:
+            return "green"
+        elif un_classes == 1:
+            return "yellow"
+        elif un_classes == 2:
+            return "orange"
+        else:
+            return "red"
 
 
 if __name__ == "__main__":
