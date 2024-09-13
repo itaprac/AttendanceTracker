@@ -18,9 +18,19 @@ class CourseTrackerGUI:
         self.master = master
         self.master.title("Śledzenie Frekwencji Kursów")
         self.tracker = CourseTracker()
+        self.selected_item = None
+
+        # Make window resazible
+        self.master.geometry("750x400")
+        self.master.minsize(700, 370)
+        self.master.columnconfigure(0, weight=1)
+        self.master.rowconfigure(1, weight=1)
 
         # Bind keybinds
         self.bind_shortcuts()
+
+        # center window
+        self.center_window()
 
         # Create and set up the GUI elements
         self.setup_gui()
@@ -31,13 +41,15 @@ class CourseTrackerGUI:
         """
         # Frame for adding new courses
         add_frame = ttk.LabelFrame(self.master, text="Dodaj nowy kurs")
-        add_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        add_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+        add_frame.columnconfigure(1, weight=1)  # Make the course name entry expandable
+        add_frame.columnconfigure(3, weight=1)  # Make the dropdown expandable
 
         # Entry fields for course name and format, and an "Add" button
         self.course_name_label = ttk.Label(add_frame, text="Nazwa kursu")
         self.course_name_label.grid(row=0, column=0, padx=10, pady=10, sticky="e")
         self.course_name_entry = ttk.Entry(add_frame)
-        self.course_name_entry.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+        self.course_name_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         # Create a label for the dropdown
         self.dropdown_label = ttk.Label(add_frame, text="Format:")
@@ -49,7 +61,7 @@ class CourseTrackerGUI:
         self.category_dropdown = ttk.Combobox(
             add_frame, textvariable=self.category_var, values=self.categories
         )
-        self.category_dropdown.grid(row=0, column=3, padx=5, pady=5, sticky="w")
+        self.category_dropdown.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
         self.category_dropdown.set("Audytorium")
         self.category_dropdown["state"] = "readonly"
 
@@ -63,6 +75,8 @@ class CourseTrackerGUI:
         # Frame for listing courses
         list_frame = ttk.LabelFrame(self.master, text="Lista Kursów")
         list_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        list_frame.columnconfigure(0, weight=1)
+        list_frame.rowconfigure(0, weight=1)
 
         # Create a Treeview widget
         self.courses_tree = ttk.Treeview(
@@ -76,9 +90,9 @@ class CourseTrackerGUI:
         self.courses_tree.heading("Format", text="Format")
         self.courses_tree.heading("Unattended Classes", text="Opuszczone")
 
-        self.courses_tree.column("Name", width=150)
-        self.courses_tree.column("Format", width=150)
-        self.courses_tree.column("Unattended Classes", width=100)
+        self.courses_tree.column("Name", width=150, stretch=tk.YES)
+        self.courses_tree.column("Format", width=150, stretch=tk.YES)
+        self.courses_tree.column("Unattended Classes", width=100, stretch=tk.YES)
 
         scrollbar = ttk.Scrollbar(
             list_frame, orient="vertical", command=self.courses_tree.yview
@@ -127,6 +141,10 @@ class CourseTrackerGUI:
         self.decrement_button.grid(row=0, column=0, padx=0, pady=0)
         self.decrement_button.config(state="disabled")
 
+        # Make sure the list_frame expands properly
+        self.master.grid_rowconfigure(1, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
+
     def add_course(self):
         """
         Adds a new course to the tracker and updates the course list.
@@ -143,17 +161,36 @@ class CourseTrackerGUI:
         else:
             messagebox.showerror("Error", "Proszę wprowadzić nazwę kursu.")
 
-    def list_courses(self):
+    def list_courses(self, select_item=None):
         """
         Lists all courses in the Treeview widget.
         """
+        # Store the current selection if no specific item is to be selected
+        if not select_item and self.selected_item:
+            current_values = self.courses_tree.item(self.selected_item, "values")
+            select_item = (current_values[0], current_values[1])  # (name, format)
+
         # Clear all items from the Treeview
         self.courses_tree.delete(*self.courses_tree.get_children())
+
         courses = self.tracker.list_courses()
         for course in courses:
-            self.courses_tree.insert(
+            item = self.courses_tree.insert(
                 "", "end", values=(course.name, course.format, course.un_classes)
             )
+            # If this is the item we want to select, store its ID
+            if select_item and (course.name, course.format) == select_item:
+                self.selected_item = item
+
+        # Restore the selection
+        if self.selected_item:
+            self.courses_tree.selection_set(self.selected_item)
+            self.courses_tree.see(
+                self.selected_item
+            )  # Ensure the selected item is visible
+
+        # couses error works fine without it
+        # self.update_button_states()
 
     def delete_course(self):
         """
@@ -186,7 +223,7 @@ class CourseTrackerGUI:
             course_name = values[0]
             course_format = values[1]
             self.tracker.increment_unattended(course_name, course_format)
-            self.list_courses()
+            self.list_courses((course_name, course_format))
 
     def decrement_unattended(self):
         """
@@ -197,7 +234,7 @@ class CourseTrackerGUI:
             course_name = values[0]
             course_format = values[1]
             self.tracker.decrement_unattended(course_name, course_format)
-            self.list_courses()
+            self.list_courses((course_name, course_format))
 
     def update_button_states(self):
         """
@@ -229,6 +266,21 @@ class CourseTrackerGUI:
     def bind_shortcuts(self):
         self.master.bind("<BackSpace>", lambda event: self.delete_course())
         self.master.bind("<Delete>", lambda event: self.delete_course())
+
+    def center_window(self):
+        # Update the idle tasks to make sure the window size is calculated
+        self.master.update_idletasks()
+
+        # Get the screen width and height
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+
+        # Calculate the x and y coordinates for the center of the screen
+        x = (screen_width // 2) - (self.master.winfo_width() // 2)
+        y = (screen_height // 2) - (self.master.winfo_height() // 2)
+
+        # Set the position of the window to the center of the screen
+        self.master.geometry(f"+{x}+{y}")
 
 
 if __name__ == "__main__":
