@@ -1,6 +1,7 @@
 from course import Course
 import pickle
 import os
+import csv
 
 
 class CourseTracker:
@@ -21,6 +22,7 @@ class CourseTracker:
         """
         self.filename = filename
         self.courses: list[Course] = self.load_courses()
+        # self.courses: list[Course] = self.import_courses(self.filename)
 
     def add_course(self, name: str, format: str) -> None:
         """
@@ -35,6 +37,7 @@ class CourseTracker:
                 raise ValueError("This course already exists")
         self.courses.append(Course(name, format))
         self.save_courses()
+        # self.export_courses(self.filename)
 
     def remove_course(self, name: str, format: str) -> None:
         """
@@ -48,6 +51,7 @@ class CourseTracker:
             if course.name == name and course.format == format:
                 self.courses.remove(course)
         self.save_courses()
+        # self.export_courses(self.filename)
 
     def get_course(self, name: str, format: str) -> Course:
         """
@@ -75,7 +79,7 @@ class CourseTracker:
         Returns:
             list[Course]: A list of all courses being tracked.
         """
-        return self.courses
+        return sorted(self.courses, key=lambda x: (x.name, x.format))
 
     def list_courses_str(self) -> list[str]:
         """
@@ -98,6 +102,7 @@ class CourseTracker:
             if course.name == name and course.format == format:
                 course.increment_un_classes()
         self.save_courses()
+        # self.export_courses(self.filename)
 
     def decrement_unattended(self, name: str, format: str) -> None:
         """
@@ -111,6 +116,7 @@ class CourseTracker:
             if course.name == name and course.format == format:
                 course.decrement_un_classes()
         self.save_courses()
+        # self.export_courses(self.filename)
 
     def save_courses(self) -> None:
         """
@@ -143,3 +149,69 @@ class CourseTracker:
                 f"An error occurred while loading {self.filename}: {str(e)}. Returning an empty list."
             )
             return []
+
+    def export_courses(self, filename) -> None:
+        fields = ["Nazwa", "Format", "Opuszczone"]
+
+        rows = []
+        for course in self.courses:
+            name = course.name
+            format = course.format
+            un_classes = course.un_classes
+            row = [name, format, str(un_classes)]
+            rows.append(row)
+
+        with open(filename, "w") as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(fields)
+            csvwriter.writerows(rows)
+
+    def import_courses_replace(self, filename):
+        if not os.path.exists(filename):
+            print(f"File {filename} does not exist.")
+
+        try:
+            with open(filename, "r") as csvfile:
+                csvreader = csv.reader(csvfile)
+                courselist = []
+                next(csvreader)
+                for row in csvreader:
+                    name = row[0]
+                    format = row[1]
+                    un_classes = row[2]
+                    course = Course(name, format, int(un_classes))
+                    courselist.append(course)
+                self.courses = courselist
+                self.save_courses()
+
+        except csv.Error:
+            print(f"Error {self.filename}. File may be corrupted.")
+        except Exception as e:
+            print(f"An error occurred while loading {self.filename}: {str(e)}.")
+
+    def import_courses_append(self, filename):
+        if not os.path.exists(filename):
+            print(f"File {filename} does not exist.")
+
+        try:
+            with open(filename, "r") as csvfile:
+                csvreader = csv.reader(csvfile)
+                courselist = []
+                next(csvreader)
+                for row in csvreader:
+                    name = row[0]
+                    format = row[1]
+                    un_classes = row[2]
+                    course = Course(name, format, int(un_classes))
+                    courselist.append(course)
+                for course in courselist:
+                    if course in self.courses:
+                        print(f"Course {course.name}, {course.format} already exists")
+                    else:
+                        self.courses.append(course)
+                self.save_courses()
+
+        except csv.Error:
+            print(f"Error {self.filename}. File may be corrupted.")
+        except Exception as e:
+            print(f"An error occurred while loading {self.filename}: {str(e)}.")

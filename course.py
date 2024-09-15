@@ -45,6 +45,12 @@ class Course:
         """Returns a string representation of the course."""
         return f"Course: {self.name}, Format: {self.format}, Unattended Classes: {self.un_classes}"
 
+    def __eq__(self, other) -> bool:
+        """
+        Returns True if the courses have the same name and format.
+        """
+        return self.name == other.name and self.format == other.format
+
     def increment_un_classes(self, amount=1) -> None:
         """
         Increments the number of unattended classes by a specified amount.

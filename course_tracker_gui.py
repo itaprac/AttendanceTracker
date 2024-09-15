@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from course_tracker import CourseTracker
+import platform
 
 
 class CourseTrackerGUI:
@@ -20,11 +21,33 @@ class CourseTrackerGUI:
         self.tracker = CourseTracker()
         self.selected_item = None
 
+        # writer test
+        # self.tracker.export_courses("test.csv")
+        # self.tracker.courses = self.tracker.import_courses("test.csv")
+
         # Make window resizable
         self.master.geometry("750x400")
         self.master.minsize(700, 370)
         self.master.columnconfigure(0, weight=1)
         self.master.rowconfigure(1, weight=1)
+
+        # Create the menu bar
+        menu_bar = tk.Menu(root)
+        root.config(menu=menu_bar)
+
+        # Create the File menu
+        file_menu = tk.Menu(menu_bar, tearoff=0)
+        menu_bar.add_cascade(label="File", menu=file_menu)
+
+        # Add Import and Export options to the File menu
+        file_menu.add_command(label="Import", command=self.import_file)
+        file_menu.add_command(label="Export", command=self.export_file)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=root.quit)
+        file_menu.add_command(
+            label="Close", accelerator="Cmd+W", command=self.close_window
+        )
+        file_menu.add_command(label="Quit", accelerator="Cmd+Q", command=root.quit)
 
         # Bind keybinds
         self.bind_shortcuts()
@@ -289,14 +312,37 @@ class CourseTrackerGUI:
             self.selected_item = new_item
             self.update_button_states()
 
+    # def bind_shortcuts(self):
+    #     self.master.bind("<BackSpace>", lambda event: self.delete_course())
+    #     self.master.bind("<Delete>", lambda event: self.delete_course())
+    #     self.master.bind("<Left>", lambda event: self.decrement_unattended())
+    #     self.master.bind("<Right>", lambda event: self.increment_unattended())
+    #     self.master.bind("<Up>", lambda event: self.move_selection(-1))
+    #     self.master.bind("<Down>", lambda event: self.move_selection(1))
+    #     self.master.bind("<Escape>", self.deselect_item)
+    #     self.master.bind("<Command-o>", self.import_file())
+    # self.master.bind("<Command-s>", self.export_file())
+    # self.master.bind("<Command-w>", self.close_window)
+    # self.master.bind("<Command-q>", lambda e: root.quit())
+
     def bind_shortcuts(self):
-        self.master.bind("<BackSpace>", lambda event: self.delete_course())
-        self.master.bind("<Delete>", lambda event: self.delete_course())
-        self.master.bind("<Left>", lambda event: self.decrement_unattended())
-        self.master.bind("<Right>", lambda event: self.increment_unattended())
+        # Common shortcuts for all platforms
+        self.master.bind("<BackSpace>", self.delete_course)
+        self.master.bind("<Delete>", self.delete_course)
+        self.master.bind("<Left>", self.decrement_unattended)
+        self.master.bind("<Right>", self.increment_unattended)
         self.master.bind("<Up>", lambda event: self.move_selection(-1))
         self.master.bind("<Down>", lambda event: self.move_selection(1))
         self.master.bind("<Escape>", self.deselect_item)
+
+        if platform.system() == "Darwin":  # macOS
+            self.master.bind("<Command-o>", self.import_file)
+            self.master.bind("<Command-s>", self.export_file)
+            self.master.bind("<Command-w>", self.close_window)
+            self.master.bind("<Command-q>", lambda event: self.master.quit())
+        else:  # Windows and Linux
+            self.master.bind("<Control-o>", self.import_file)
+            self.master.bind("<Control-s>", self.export_file)
 
     def center_window(self):
         # Update the idle tasks to make sure the window size is calculated
@@ -328,6 +374,46 @@ class CourseTrackerGUI:
             return "orange"
         else:
             return "red"
+
+    def import_file(self):
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Text files", "*.csv"), ("All files", "*.*")]
+        )
+
+        if file_path:
+            response = messagebox.askyesnocancel(
+                "Import Options",
+                "Do you want to replace the existing configuration?\n\n"
+                "Yes: Replace existing configuration\n"
+                "No: Append to existing configuration\n"
+                "Cancel: Abort import",
+            )
+
+            if response is None:  # User clicked Cancel
+                print("Import cancelled")
+            elif response:  # User clicked Yes
+                print(f"Replacing existing configuration with: {file_path}")
+                self.tracker.import_courses_replace(file_path)
+            else:  # User clicked No
+                print(f"Appending to existing configuration from: {file_path}")
+                self.tracker.import_courses_append(file_path)
+        self.list_courses()
+
+    def export_file(self):
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[
+                ("Csv files", "*.csv"),
+                ("All files", "*.*"),
+            ],
+        )
+        if file_path:
+            self.tracker.export_courses(file_path)
+            print(f"Exporting file: {file_path}")
+
+    def close_window(self, event=None):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            root.quit()
 
 
 if __name__ == "__main__":
