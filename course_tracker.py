@@ -53,6 +53,9 @@ class CourseTracker:
         self.save_courses()
         # self.export_courses(self.filename)
 
+    def reset_data(self):
+        self.courses = []
+
     def get_course(self, name: str, format: str) -> Course:
         """
         Retrieves a course by name and format.

@@ -42,6 +42,7 @@ class CourseTrackerGUI:
         # Add Import and Export options to the File menu
         file_menu.add_command(label="Import", command=self.import_file)
         file_menu.add_command(label="Export", command=self.export_file)
+        file_menu.add_command(label="Reset all data", command=self.reset_data)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=root.quit)
         file_menu.add_command(
@@ -327,10 +328,8 @@ class CourseTrackerGUI:
 
     def bind_shortcuts(self):
         # Common shortcuts for all platforms
-        self.master.bind("<BackSpace>", self.delete_course)
-        self.master.bind("<Delete>", self.delete_course)
-        self.master.bind("<Left>", self.decrement_unattended)
-        self.master.bind("<Right>", self.increment_unattended)
+        self.master.bind("<Left>", lambda event: self.decrement_unattended())
+        self.master.bind("<Right>", lambda event: self.increment_unattended())
         self.master.bind("<Up>", lambda event: self.move_selection(-1))
         self.master.bind("<Down>", lambda event: self.move_selection(1))
         self.master.bind("<Escape>", self.deselect_item)
@@ -340,7 +339,9 @@ class CourseTrackerGUI:
             self.master.bind("<Command-s>", self.export_file)
             self.master.bind("<Command-w>", self.close_window)
             self.master.bind("<Command-q>", lambda event: self.master.quit())
+            self.master.bind("<BackSpace>", lambda event: self.delete_course())
         else:  # Windows and Linux
+            self.master.bind("<Delete>", lambda event: self.delete_course())
             self.master.bind("<Control-o>", self.import_file)
             self.master.bind("<Control-s>", self.export_file)
 
@@ -414,6 +415,14 @@ class CourseTrackerGUI:
     def close_window(self, event=None):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             root.quit()
+
+    def reset_data(self):
+        if messagebox.askokcancel(
+            "Reset Data",
+            "Czy napewno chcesz zresetowac dane? To operacja jest nieodwracalna!",
+        ):
+            self.tracker.reset_data()
+            self.list_courses()
 
 
 if __name__ == "__main__":
