@@ -1,0 +1,89 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Course Tracker\n"
+"POT-Creation-Date: 2023-09-15 12:00+0000\n"
+"PO-Revision-Date: 2023-09-15 12:00+0000\n"
+"Last-Translator: Your Name <your.email@example.com>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Course Attendance Tracker"
+msgstr "Course Attendance Tracker"
+
+msgid "File"
+msgstr "File"
+
+msgid "Import"
+msgstr "Import"
+
+msgid "Export"
+msgstr "Export"
+
+msgid "Reset all data"
+msgstr "Reset all data"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Exit"
+msgstr "Exit"
+
+msgid "Add new course"
+msgstr "Add new course"
+
+msgid "Course name"
+msgstr "Course name"
+
+msgid "Format:"
+msgstr "Format:"
+
+msgid "Auditorium"
+msgstr "Auditorium"
+
+msgid "Lecture"
+msgstr "Lecture"
+
+msgid "Laboratory"
+msgstr "Laboratory"
+
+msgid "Add"
+msgstr "Add"
+
+msgid "Course List"
+msgstr "Course List"
+
+msgid "Course"
+msgstr "Course"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Unattended"
+msgstr "Unattended"
+
+msgid "Delete Course"
+msgstr "Delete Course"
+
+msgid "Import options"
+msgstr "Import options"
+
+msgid "Do you want to replace the existing configuration?\n\nYes: Replace existing configuration\nNo: Add to existing configuration\nCancel: Abort import"
+msgstr "Do you want to replace the existing configuration?\n\nYes: Replace existing configuration\nNo: Add to existing configuration\nCancel: Abort import"
+
+msgid "CSV files"
+msgstr "CSV files"
+
+msgid "All files"
+msgstr "All files"
+
+msgid "Do you want to exit the program?"
+msgstr "Do you want to exit the program?"
+
+msgid "Reset data"
+msgstr "Reset data"
+
+msgid "Are you sure you want to reset the data? This operation is irreversible!"
+msgstr "Are you sure you want to reset the data? This operation is irreversible!"
