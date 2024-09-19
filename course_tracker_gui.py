@@ -1,13 +1,16 @@
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
-from course_tracker import CourseTracker
 import platform
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
+
+import darkdetect  # type: ignore
+
+from course_tracker import CourseTracker
 
 
 class CourseTrackerGUI:
     def __init__(self, master):
         self.master = master
-        self.master.title(("Course Attendance Tracker"))
+        self.master.title("Śledzenie obecności na kursach")
         self.tracker = CourseTracker()
         self.selected_item = None
 
@@ -26,36 +29,36 @@ class CourseTrackerGUI:
         self.master.config(menu=menu_bar)
 
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        menu_bar.add_cascade(label=("File"), menu=file_menu)
+        menu_bar.add_cascade(label="Plik", menu=file_menu)
 
-        file_menu.add_command(label=("Import"), command=self.import_file)
-        file_menu.add_command(label=("Export"), command=self.export_file)
-        file_menu.add_command(label=("Reset all data"), command=self.reset_data)
+        file_menu.add_command(label="Import", command=self.import_file)
+        file_menu.add_command(label="Export", command=self.export_file)
+        file_menu.add_command(label="Resetuj wszystkie dane", command=self.reset_data)
         file_menu.add_separator()
         file_menu.add_command(
-            label=("Close"), accelerator="Cmd+W", command=self.close_window
+            label="Close", accelerator="Cmd+W", command=self.close_window
         )
         file_menu.add_command(
-            label=("Exit"), accelerator="Cmd+Q", command=self.master.quit
+            label="Exit", accelerator="Cmd+Q", command=self.master.quit
         )
 
     def setup_gui(self):
-        add_frame = ttk.LabelFrame(self.master, text=("Add new course"))
+        add_frame = ttk.LabelFrame(self.master, text="Dodaj nowy kurs")
         add_frame.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
         add_frame.columnconfigure(1, weight=1)
         add_frame.columnconfigure(3, weight=1)
 
-        ttk.Label(add_frame, text=("Course name")).grid(
+        ttk.Label(add_frame, text="Nazwa kursu").grid(
             row=0, column=0, padx=10, pady=10, sticky="e"
         )
         self.course_name_entry = ttk.Entry(add_frame)
         self.course_name_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(add_frame, text=("Format:")).grid(
+        ttk.Label(add_frame, text="Format:").grid(
             row=0, column=2, padx=5, pady=5, sticky="e"
         )
 
-        self.categories = [("Auditorium"), ("Lecture"), ("Laboratory")]
+        self.categories = ["Audytorium", "Wykład", "Laboratorium"]
         self.category_var = tk.StringVar()
         self.category_dropdown = ttk.Combobox(
             add_frame,
@@ -64,13 +67,13 @@ class CourseTrackerGUI:
             state="readonly",
         )
         self.category_dropdown.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
-        self.category_dropdown.set(("Auditorium"))
+        self.category_dropdown.set("Audytorium")
 
-        ttk.Button(add_frame, text=("Add"), command=self.add_course).grid(
+        ttk.Button(add_frame, text="Dodaj", command=self.add_course).grid(
             row=0, column=4, padx=5, pady=5, sticky="w"
         )
 
-        list_frame = ttk.LabelFrame(self.master, text=("Course List"))
+        list_frame = ttk.LabelFrame(self.master, text="Lista kursów")
         list_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         list_frame.columnconfigure(0, weight=1)
         list_frame.rowconfigure(0, weight=1)
@@ -82,9 +85,9 @@ class CourseTrackerGUI:
         )
         self.courses_tree.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
-        self.courses_tree.heading("Name", text=("Course"))
-        self.courses_tree.heading("Format", text=("Format"))
-        self.courses_tree.heading("Unattended Classes", text=("Unattended"))
+        self.courses_tree.heading("Name", text="Kurs")
+        self.courses_tree.heading("Format", text="Format")
+        self.courses_tree.heading("Unattended Classes", text="Nieobecności")
 
         self.courses_tree.column("Name", width=150, stretch=tk.YES)
         self.courses_tree.column("Format", width=150, stretch=tk.YES)
@@ -107,7 +110,7 @@ class CourseTrackerGUI:
 
         self.delete_button = ttk.Button(
             button_frame,
-            text=("Delete Course"),
+            text="Usuń kurs",
             command=self.delete_course,
             width=10,
             state="disabled",
@@ -143,9 +146,9 @@ class CourseTrackerGUI:
                 self.course_name_entry.delete(0, tk.END)
                 self.list_courses()
             except Exception as e:
-                messagebox.showerror("Błąd", f"Nie udało się dodać kursu: {str(e)}")
+                messagebox.showerror("Error", f"Nie udało się dodać kursu: {str(e)}")
         else:
-            messagebox.showerror("Błąd", "Proszę wprowadzić nazwę kursu.")
+            messagebox.showerror("Error", "Proszę wprowadzić nazwę kursu.")
 
     def list_courses(self, select_item=None):
         if not select_item and self.selected_item:
@@ -174,7 +177,8 @@ class CourseTrackerGUI:
             values = self.courses_tree.item(self.selected_item, "values")
             course_name, course_format = values[0], values[1]
             if messagebox.askyesno(
-                "Potwierdzenie Usunięcia", f"Czy na pewno chcesz usunąć {course_name}?"
+                "Potwierdzenie usunięcia",
+                f"Czy na pewno chcesz usunąć {course_name}?",
             ):
                 try:
                     self.tracker.remove_course(course_name, course_format)
@@ -183,7 +187,7 @@ class CourseTrackerGUI:
                     self.update_button_states()
                 except Exception as e:
                     messagebox.showerror(
-                        "Błąd", f"Nie udało się usunąć kursu: {str(e)}"
+                        "Error", f"Nie udało się usunąć kursu: {str(e)}"
                     )
 
     def increment_unattended(self):
@@ -261,29 +265,39 @@ class CourseTrackerGUI:
         self.master.geometry(f"+{x}+{y}")
 
     def setup_treeview_tags(self):
-        self.courses_tree.tag_configure("green", background="#90EE90")
-        self.courses_tree.tag_configure("yellow", background="#faf86e")
-        self.courses_tree.tag_configure("orange", background="#f5b127")
-        self.courses_tree.tag_configure("red", background="#ff4051")
+        if darkdetect.isLight():
+            self.courses_tree.tag_configure("green", background="#90EE90")
+            self.courses_tree.tag_configure("yellow", background="#faf86e")
+            self.courses_tree.tag_configure("orange", background="#f5b127")
+            self.courses_tree.tag_configure("red", background="#ff4051")
+        else:
+            self.courses_tree.tag_configure(
+                "green", background="#006400", foreground="#FFFFFF"
+            )
+            self.courses_tree.tag_configure(
+                "yellow", background="#FFD700", foreground="#000000"
+            )
+            self.courses_tree.tag_configure(
+                "orange", background="#FF8C00", foreground="#FFFFFF"
+            )
+            self.courses_tree.tag_configure(
+                "red", background="#8B0000", foreground="#FFFFFF"
+            )
 
     def get_attendance_tag(self, un_classes):
-        return ["green", "yellow", "orange", "red"][
-            min(un_classes, 3)
-        ]  # ... (rest of the methods remain the same, just replace string literals with _("..."))
+        return ["green", "yellow", "orange", "red"][min(un_classes, 3)]
 
     def import_file(self, event=None):
         file_path = filedialog.askopenfilename(
-            filetypes=[(("Text files"), "*.csv"), (("All files"), "*.*")]
+            filetypes=[("Pliki tekstowe", "*.csv"), ("Wszystkie pliki", "*.*")]
         )
         if file_path:
             response = messagebox.askyesnocancel(
-                ("Import options"),
-                (
-                    "Do you want to replace the existing configuration?\n\n"
-                    "Yes: Replace existing configuration\n"
-                    "No: Add to existing configuration\n"
-                    "Cancel: Abort import"
-                ),
+                "Opcje importu",
+                "Czy chcesz zastąpić istniejącą konfigurację?\n\n"
+                "Tak: Zastąp istniejącą konfigurację\n"
+                "Nie: Dodaj do istniejącej konfiguracji\n"
+                "Anuluj: Przerwij import",
             )
             if response is not None:
                 if response:
@@ -295,21 +309,19 @@ class CourseTrackerGUI:
     def export_file(self, event=None):
         file_path = filedialog.asksaveasfilename(
             defaultextension=".csv",
-            filetypes=[(("CSV files"), "*.csv"), (("All files"), "*.*")],
+            filetypes=[("Pliki CSV", "*.csv"), ("Wszystkie pliki", "*.*")],
         )
         if file_path:
             self.tracker.export_courses(file_path)
 
     def close_window(self, event=None):
-        if messagebox.askokcancel(("Exit"), ("Do you want to exit the program?")):
+        if messagebox.askokcancel("Exit", "Czy chcesz zakończyć program?"):
             self.master.quit()
 
     def reset_data(self):
         if messagebox.askokcancel(
-            ("Reset data"),
-            (
-                "Are you sure you want to reset the data? This operation is irreversible!"
-            ),
+            "Resetuj dane",
+            "Czy na pewno chcesz zresetować dane? Ta operacja jest nieodwracalna!",
         ):
             self.tracker.reset_data()
             self.list_courses()

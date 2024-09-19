@@ -1,5 +1,19 @@
 requirements.txt
 courses.pkl
+build/
+dist/
+locales/
+courses.json
+
+# Ignore csv files
+*.csv
+
+# Ignore png files
+*.png
+
+
+# Ignore all files with 'test' in the name
+*test*.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

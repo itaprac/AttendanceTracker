@@ -1,25 +1,25 @@
-from course import Course
-import pickle
-import os
 import csv
+import os
+from typing import List
+
+from tinydb import TinyDB
+
+from course import Course
 
 
 class CourseTracker:
-    def __init__(self, filename: str = "courses.pkl"):
-        self.filename = filename
-        self.courses: list[Course] = self.load_courses()
+    def __init__(self) -> None:
+        self.courses: List[Course] = []
+        self.create_database()
 
-    def add_course(self, name: str, format: str) -> None:
+    def add_course(self, name: str, format: str, un_classes: int = 0) -> None:
         for course in self.courses:
             if course.name == name and course.format == format:
-                raise ValueError("This course already exists")
-        self.courses.append(Course(name, format))
+                raise ValueError("Ten kurs juz istnieje")
+        self.courses.append(Course(name, format, un_classes))
         self.save_courses()
 
     def remove_course(self, name: str, format: str) -> None:
-        # self.courses = [
-        #     c for c in self.courses if not (c.name == name and c.format == format)
-        # ]
         for course in self.courses:
             if course.name == name and course.format == format:
                 self.courses.remove(course)
@@ -29,13 +29,14 @@ class CourseTracker:
         self.courses = []
         self.save_courses()
 
-    def get_course(self, name: str, format: str) -> Course:
+    # Type cheking for tinydb??
+    def get_course(self, name: str, format: str):
         for course in self.courses:
             if course.name == name and course.format == format:
                 return course
-        raise ValueError("This course doesn't exist")
+        raise ValueError("Ten kurs nie istnieje")
 
-    def list_courses(self) -> list[Course]:
+    def list_courses(self) -> List[Course]:
         return sorted(self.courses, key=lambda x: (x.name, x.format))
 
     def list_courses_str(self) -> list[str]:
@@ -51,21 +52,36 @@ class CourseTracker:
         course.decrement_un_classes()
         self.save_courses()
 
+    def create_database(self) -> None:
+        # directory = "."
+        directory = "/Users/itaprac/Library/Application Support/CourseAttendanceTracker"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        self.database = os.path.join(directory, "course_databse.json")
+        self.db = TinyDB(self.database)
+        self.load_courses()
+
     def save_courses(self) -> None:
-        with open(self.filename, "wb") as f:
-            pickle.dump(self.courses, f)
+        self.db.truncate()
+        for course in sorted(self.courses, key=lambda x: (x.name, x.format)):
+            self.db.insert(
+                {
+                    "name": course.name,
+                    "format": course.format,
+                    "un_classes": course.un_classes,
+                }
+            )
 
-    def load_courses(self) -> list[Course]:
-        if not os.path.exists(self.filename):
-            print(f"File {self.filename} does not exist. Returning an empty list.")
-            return []
+    def load_courses(self):
+        if not os.path.exists(self.database):
+            print(f"File {self.database} does not exist. Returning empty list")
+            self.courses = []
 
-        try:
-            with open(self.filename, "rb") as f:
-                return pickle.load(f)
-        except (pickle.UnpicklingError, Exception) as e:
-            print(f"Error loading {self.filename}: {str(e)}. Returning an empty list.")
-            return []
+        self.db = TinyDB(self.database)
+        for course in self.db.all():
+            self.courses.append(
+                Course(course["name"], course["format"], course["un_classes"])
+            )
 
     def export_courses(self, filename: str) -> None:
         fields = ["Nazwa", "Format", "Opuszczone"]
