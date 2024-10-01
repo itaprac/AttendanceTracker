@@ -54,7 +54,12 @@ class CourseTracker:
 
     def create_database(self) -> None:
         # directory = "."
-        directory = "/Users/itaprac/Library/Application Support/CourseAttendanceTracker"
+        directory = os.path.join(
+            os.path.expanduser("~"),
+            "Library",
+            "Application Support",
+            "CourseAttendanceTracker",
+        )
         if not os.path.exists(directory):
             os.makedirs(directory)
         self.database = os.path.join(directory, "course_databse.json")
@@ -73,15 +78,19 @@ class CourseTracker:
             )
 
     def load_courses(self):
+        self.courses = []
         if not os.path.exists(self.database):
             print(f"File {self.database} does not exist. Returning empty list")
-            self.courses = []
+            return
 
-        self.db = TinyDB(self.database)
-        for course in self.db.all():
-            self.courses.append(
-                Course(course["name"], course["format"], course["un_classes"])
-            )
+        try:
+            self.db = TinyDB(self.database)
+            for course in self.db.all():
+                self.courses.append(
+                    Course(course["name"], course["format"], course["un_classes"])
+                )
+        except Exception as e:
+            print(f"Error loading courses: {e}")
 
     def export_courses(self, filename: str) -> None:
         fields = ["Nazwa", "Format", "Opuszczone"]
