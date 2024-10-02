@@ -1,5 +1,6 @@
 import csv
 import os
+import platform
 from typing import List
 
 from tinydb import TinyDB
@@ -54,12 +55,24 @@ class CourseTracker:
 
     def create_database(self) -> None:
         # directory = "."
-        directory = os.path.join(
-            os.path.expanduser("~"),
-            "Library",
-            "Application Support",
-            "CourseAttendanceTracker",
-        )
+        if platform.system() == "Darwin":  # macOS
+            directory = os.path.join(
+                os.path.expanduser("~"),
+                "Library",
+                "Application Support",
+                "CourseAttendanceTracker",
+            )
+        elif platform.system() == "Windows":
+            appdata_path = os.getenv("APPDATA")
+            if appdata_path is None:
+                raise ValueError("APPDATA environment variable is not set")
+
+            directory = os.path.join(appdata_path, "CourseAttendanceTracker")
+        else:  # Linux and other OS
+            directory = os.path.join(
+                os.path.expanduser("~"), ".CourseAttendanceTracker"
+            )
+
         if not os.path.exists(directory):
             os.makedirs(directory)
         self.database = os.path.join(directory, "course_databse.json")

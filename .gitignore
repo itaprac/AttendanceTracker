@@ -4,6 +4,7 @@ build/
 dist/
 locales/
 courses.json
+.DS_Store
 
 # Ignore csv files
 *.csv
