@@ -10,7 +10,7 @@ courses.json
 *.csv
 
 # Ignore png files
-*.png
+# *.png
 
 # Ignore all files with 'test' in the name
 *test*.*
