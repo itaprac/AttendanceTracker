@@ -105,7 +105,7 @@ class CourseTracker:
         except Exception as e:
             print(f"Error loading courses: {e}")
 
-    def export_courses(self, filename: str) -> None:
+    def export_courses(self, filename: str, test, test2, test3, test4, test5, test6, test7,) -> None:
         fields = ["Nazwa", "Format", "Opuszczone"]
         rows = [
             [course.name, course.format, str(course.un_classes)]
