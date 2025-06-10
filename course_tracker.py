@@ -9,8 +9,18 @@ from course import Course
 
 
 class CourseTracker:
-    def __init__(self) -> None:
+    def __init__(self, db_directory: str | None = None) -> None:
+        """Create a tracker instance.
+
+        Parameters
+        ----------
+        db_directory:
+            Optional path where the database file should be stored. When not
+            provided the directory is resolved based on the operating system.
+        """
+
         self.courses: List[Course] = []
+        self.db_directory = db_directory
         self.create_database()
 
     def add_course(self, name: str, format: str, un_classes: int = 0) -> None:
@@ -54,8 +64,11 @@ class CourseTracker:
         self.save_courses()
 
     def create_database(self) -> None:
-        # directory = "."
-        if platform.system() == "Darwin":  # macOS
+        """Initialise the TinyDB database used to store courses."""
+
+        if self.db_directory is not None:
+            directory = self.db_directory
+        elif platform.system() == "Darwin":  # macOS
             directory = os.path.join(
                 os.path.expanduser("~"),
                 "Library",
@@ -75,7 +88,7 @@ class CourseTracker:
 
         if not os.path.exists(directory):
             os.makedirs(directory)
-        self.database = os.path.join(directory, "course_databse.json")
+        self.database = os.path.join(directory, "course_database.json")
         self.db = TinyDB(self.database)
         self.load_courses()
 
@@ -105,7 +118,9 @@ class CourseTracker:
         except Exception as e:
             print(f"Error loading courses: {e}")
 
-    def export_courses(self, filename: str, test, test2, test3, test4, test5, test6, test7,) -> None:
+    def export_courses(self, filename: str) -> None:
+        """Export all courses to ``filename`` as CSV."""
+
         fields = ["Nazwa", "Format", "Opuszczone"]
         rows = [
             [course.name, course.format, str(course.un_classes)]
